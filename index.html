@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}html{color-scheme:light}body{margin:0}img{max-width:100%}</style>
+<title>Misi Matematik SBM10022</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: satu panel instrumen di tengah. Skrin utama pilih topik, soalan besar dengan empat pilihan, kerja penyelesaian selepas setiap jawapan, papan markah untuk pensyarah. */
+:root {
+  --bg: #EEF2F6;
+  --surface: #FFFFFF;
+  --surface-2: #E4EAF1;
+  --ink: #16222F;
+  --muted: #566577;
+  --line: #CBD5E0;
+  --brand: #1F3A5F;
+  --brand-ink: #F3F6F9;
+  --accent: #D9822B;
+  --accent-ink: #1B1206;
+  --good: #1F7A47;
+  --good-bg: #DDF1E4;
+  --bad: #B3402F;
+  --bad-bg: #F9E1DC;
+  --font-display: 'Bricolage Grotesque', 'DM Sans', system-ui, sans-serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1823; --surface: #16273A; --surface-2: #1E3350; --ink: #E7EEF5; --muted: #9DB0C3; --line: #2C4560;
+    --brand: #7FA8DA; --brand-ink: #0E1823; --accent: #E59A48; --accent-ink: #1B1206;
+    --good: #5CC98A; --good-bg: #17382A; --bad: #F08A78; --bad-bg: #40211C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1823; --surface: #16273A; --surface-2: #1E3350; --ink: #E7EEF5; --muted: #9DB0C3; --line: #2C4560;
+  --brand: #7FA8DA; --brand-ink: #0E1823; --accent: #E59A48; --accent-ink: #1B1206;
+  --good: #5CC98A; --good-bg: #17382A; --bad: #F08A78; --bad-bg: #40211C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.5;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { max-width: 760px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+p { margin: 0; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.label { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.topbar .course { font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--brand); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.title { font-size: clamp(36px, 9vw, 56px); font-weight: 800; letter-spacing: -.02em; color: var(--brand); }
+.lead { font-size: 18px; max-width: 56ch; }
+.btn { background: var(--brand); color: var(--brand-ink); border: 0; border-radius: 8px; padding: 12px 22px; font-weight: 700; font-size: 17px; min-height: 48px; align-self: flex-start; }
+.btn:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.ghost { background: transparent; color: var(--brand); border: 1.5px solid var(--brand); }
+.btn.small { min-height: 38px; padding: 6px 14px; font-size: 15px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.msg { font-size: 15px; color: var(--muted); }
+.msg.ok { color: var(--good); font-weight: 700; }
+.msg.err { color: var(--bad); font-weight: 700; }
+
+/* Pelajar */
+.ident { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .ident { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field input { background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; min-height: 46px; width: 100%; }
+.field input:focus-visible { border-color: var(--brand); }
+
+/* Pilih topik */
+.topics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .topics { grid-template-columns: 1fr; } }
+.topic { text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.topic:disabled { opacity: .5; cursor: not-allowed; }
+.topic:hover:not(:disabled) { border-color: var(--brand); background: var(--surface-2); }
+.topic h3 { font-size: 22px; color: var(--brand); }
+.topic .desc { font-size: 15px; color: var(--muted); }
+.topic .bestline { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-top: 4px; }
+.topic .bestline.none { color: var(--muted); font-weight: 500; }
+
+/* HUD */
+.hud { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.hud-group { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.lives { display: flex; gap: 6px; }
+.life { width: 18px; height: 18px; border-radius: 50%; background: var(--bad); border: 2px solid var(--bad); }
+.life.lost { background: transparent; opacity: .45; }
+.pill { font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; background: var(--brand); color: var(--brand-ink); }
+.pill.l2 { background: var(--accent); color: var(--accent-ink); }
+.score { font-family: var(--font-mono); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.combo { font-family: var(--font-mono); font-size: 13px; font-weight: 700; background: var(--accent); color: var(--accent-ink); padding: 3px 9px; border-radius: 4px; }
+.progress { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--brand); }
+.fig { display: flex; justify-content: center; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.fig svg { max-width: 300px; }
+.notice { background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 10px 14px; font-weight: 700; font-size: 15px; }
+.qtext { font-size: clamp(24px, 5.2vw, 34px); font-weight: 800; letter-spacing: -.01em; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 380px) { .opts { grid-template-columns: 1fr; } }
+.opt { display: flex; align-items: center; gap: 12px; text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: 8px; padding: 14px; min-height: 68px; font-weight: 700; font-size: 19px; min-width: 0; overflow-wrap: anywhere; }
+.opt:hover:not(:disabled) { border-color: var(--brand); background: var(--surface-2); }
+.opt .key { flex: none; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 4px; background: var(--surface-2); font-family: var(--font-mono); font-size: 14px; color: var(--muted); }
+.opt:disabled { cursor: default; }
+.opt.correct { border-color: var(--good); background: var(--good-bg); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.opt.dim { opacity: .55; }
+.fb { border-radius: 8px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; border: 1.5px solid var(--line); background: var(--surface-2); }
+.fb.good { border-color: var(--good); background: var(--good-bg); }
+.fb.bad { border-color: var(--bad); background: var(--bad-bg); }
+.fb h3 { font-size: 21px; }
+.fb .pts { font-family: var(--font-mono); font-weight: 700; }
+details.ref { border-top: 1px solid var(--line); padding-top: 14px; }
+details.ref summary { cursor: pointer; font-weight: 700; color: var(--brand); }
+.reftable { overflow-x: auto; margin-top: 12px; }
+.reftable table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 380px; }
+.reftable th, .reftable td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.reftable th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* Keputusan */
+.rank { font-size: clamp(28px, 7vw, 42px); font-weight: 800; color: var(--brand); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 480px) { .stats { grid-template-columns: 1fr; } }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+.stat b { font-family: var(--font-mono); font-size: 28px; font-variant-numeric: tabular-nums; }
+.send { border: 1.5px solid var(--line); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.send h3 { font-size: 20px; }
+.card { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.card dt { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); align-self: center; }
+.card dd { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.resline-old { font-family: var(--font-mono); font-size: 14px; background: var(--surface-2); border-radius: 6px; padding: 10px 12px; overflow-wrap: anywhere; }
+.miss { display: flex; flex-direction: column; gap: 10px; }
+.miss-item { border-left: 4px solid var(--bad); padding: 4px 0 4px 14px; display: flex; flex-direction: column; gap: 2px; }
+.miss-item b { font-weight: 700; }
+.miss-item span { color: var(--muted); font-size: 15px; }
+
+/* Papan markah pensyarah */
+.resline-unused { overflow-x: auto; }
+.board table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.board th, .board td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.board th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.board td.na { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+
+<main class="app">
+  <div class="topbar">
+    <span class="course">SBM10022 · MATEMATIK</span>
+    <span class="label" id="top-label">Misi latihan</span>
+  </div>
+
+  <!-- Skrin utama -->
+  <section id="s-home" class="panel">
+    <div class="label">Permainan latihan</div>
+    <h1 class="title">Misi Matematik</h1>
+    <p class="lead">Pilih satu topik. Setiap misi ada 20 soalan senang. Topik Pengukuran dan Persamaan Linear ada gambarajah untuk membantu. Tiada pemasa. Selepas setiap jawapan anda nampak kerja penyelesaiannya. Soalan tidak berhenti walaupun anda tersilap.</p>
+    <div class="ident">
+      <div class="field"><label class="label" for="inp-nama">Nama penuh</label><input id="inp-nama" type="text" autocomplete="name" maxlength="60" placeholder="Seperti dalam senarai kelas"></div>
+      <div class="field"><label class="label" for="inp-kump">Kelas</label><input id="inp-kump" type="text" maxlength="30" placeholder="Contoh: DEE1A"></div>
+    </div>
+    <p class="msg">Nama dan kelas dipaparkan pada kad keputusan di hujung misi, untuk anda tangkap layar dan hantar kepada pensyarah.</p>
+    <p class="msg err" id="gate">Isi nama dan kelas dahulu untuk pilih topik.</p>
+    <div class="topics" id="topics"></div>
+  </section>
+
+  <!-- Skrin permainan -->
+  <section id="s-game" class="panel" hidden>
+    <div class="hud">
+      <div class="hud-group">
+        <button class="btn ghost small" id="b-home" type="button">Pilih topik</button>
+      </div>
+      <div class="hud-group">
+        <span class="combo" id="combo" hidden></span>
+        <span class="score" id="score">0</span>
+      </div>
+    </div>
+    <div class="progress" aria-hidden="true"><div id="prog" style="width:0%"></div></div>
+    <div class="label" id="qno">Soalan 1 / 20</div>
+    <div>
+      <div class="label" id="qtag" style="margin-bottom:8px"></div>
+      <h2 class="qtext" id="qtext"></h2>
+    </div>
+    <div class="fig" id="qfig" hidden></div>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb" hidden aria-live="polite">
+      <h3 id="fb-title"></h3>
+      <p id="fb-work"></p>
+      <p class="pts" id="fb-pts"></p>
+      <button class="btn" id="b-next" type="button">Seterusnya</button>
+    </div>
+    <details class="ref">
+      <summary>Rujukan pantas</summary>
+      <div class="reftable"><table id="reftable"></table></div>
+    </details>
+  </section>
+
+  <!-- Skrin keputusan -->
+  <section id="s-end" class="panel" hidden>
+    <div class="label" id="end-label">Misi tamat</div>
+    <h2 class="rank" id="rank"></h2>
+    <div class="stats">
+      <div class="stat"><span class="label">Skor</span><b id="e-score">0</b></div>
+      <div class="stat"><span class="label">Betul</span><b id="e-correct">0</b></div>
+      <div class="stat"><span class="label">Skor terbaik</span><b id="e-best">0</b></div>
+    </div>
+    <div class="send">
+      <h3>Kad keputusan</h3>
+      <dl class="card">
+        <dt>Nama</dt><dd id="c-nama"></dd>
+        <dt>Kelas</dt><dd id="c-kump"></dd>
+        <dt>Topik</dt><dd id="c-topik"></dd>
+        <dt>Markah</dt><dd id="c-markah"></dd>
+        <dt>Betul</dt><dd id="c-betul"></dd>
+        <dt>Tarikh</dt><dd id="c-tarikh"></dd>
+      </dl>
+      <p class="msg" id="c-warn"></p>
+      <p class="msg">Tangkap layar kad ini dan hantar kepada pensyarah.</p>
+    </div>
+    <div class="miss" id="miss"></div>
+    <div class="row">
+      <button class="btn" id="b-again" type="button">Main lagi</button>
+      <button class="btn ghost" id="b-home2" type="button">Pilih topik lain</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var rnd = function (a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; };
+  var pick = function (a) { return a[Math.floor(Math.random() * a.length)]; };
+  var shuffle = function (a) {
+    a = a.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  };
+  var fmt = function (n) { return String(Math.round(n * 100) / 100).replace('-', '−'); };
+  var deck = function (arr) {
+    var d = [];
+    return function () { if (!d.length) d = shuffle(arr); return d.pop(); };
+  };
+  var TOTAL = 20;
+  /* ---------- Penjana soalan ---------- */
+  function build(tag, text, correct, wrongs, working, fixed) {
+    var uniq = [];
+    wrongs.forEach(function (w) { if (w !== correct && uniq.indexOf(w) < 0) uniq.push(w); });
+    var list = fixed ? [correct].concat(uniq).sort(function (a, b) { return fixed.indexOf(a) - fixed.indexOf(b); })
+                     : shuffle([correct].concat(uniq.slice(0, 3)));
+    return {
+      tag: tag, text: text, working: working, answer: correct,
+      opts: list.map(function (l) { return { label: l, correct: l === correct }; })
+    };
+  }
+  function numQ(tag, text, ans, wrongs, unit, working, pre, suf) {
+    var lab = function (x) { return (pre || '') + fmt(x) + (unit ? ' ' + unit : '') + (suf || ''); };
+    var w = wrongs.concat([ans * 2, ans / 2, ans + 1, ans - 1, ans * 5]).filter(function (x) { return isFinite(x); }).map(lab);
+    return build(tag, text, lab(ans), w, working);
+  }
+  function poly(list) {
+    var s = '';
+    list.forEach(function (t) {
+      var c = t[0], v = t[1];
+      if (c === 0) return;
+      var a = Math.abs(c);
+      var body = (v && a === 1) ? v : (fmt(a) + v);
+      if (!s) s = (c < 0 ? '−' : '') + body;
+      else s += (c < 0 ? ' − ' : ' + ') + body;
+    });
+    return s || '0';
+  }
+  function lhs(v, n) { return n === 0 ? v : v + (n < 0 ? ' + ' : ' − ') + Math.abs(n); }
+  function eqY(m, c) { return 'y = ' + poly([[m, 'x'], [c, '']]); }
+  function chooseN(fns, n) { return shuffle(fns).slice(0, n).map(function (g) { return g(); }); }
+  var nonzero = function (a, b) { var n = 0; while (n === 0) n = rnd(a, b); return n; };
+
+
+  /* ---------- Gambarajah ---------- */
+  function svgWrap(w, h, inner) { return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" role="img" aria-label="Gambarajah soalan" style="width:100%;height:auto">' + inner + '</svg>'; }
+  function tx(x, y, s, anchor) { return '<text x="' + x + '" y="' + y + '" text-anchor="' + (anchor || 'middle') + '" font-size="14" font-weight="700" fill="var(--ink)" font-family="JetBrains Mono, monospace">' + s + '</text>'; }
+  var SH = 'fill="var(--surface-2)" stroke="var(--brand)" stroke-width="2.5" stroke-linejoin="round"';
+  var DASH = 'stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4" fill="none"';
+  function rightMark(x, y, dx, dy) { return '<path d="M' + (x + dx * 12) + ' ' + y + ' L' + (x + dx * 12) + ' ' + (y + dy * 12) + ' L' + x + ' ' + (y + dy * 12) + '" fill="none" stroke="var(--accent)" stroke-width="2"/>'; }
+  function figRect(wl, hl, ratio) {
+    var w = 170, h = Math.max(60, Math.min(120, Math.round(w * ratio)));
+    return svgWrap(280, h + 70, '<rect x="40" y="20" width="' + w + '" height="' + h + '" ' + SH + '/>' + tx(40 + w / 2, 20 + h + 24, wl) + tx(40 + w + 10, 20 + h / 2 + 5, hl, 'start'));
+  }
+  function figTri(bl, hl) {
+    return svgWrap(280, 190, '<polygon points="30,150 230,150 90,30" ' + SH + '/><line x1="90" y1="30" x2="90" y2="150" ' + DASH + '/>' + rightMark(90, 150, -1, -1) + tx(130, 174, bl) + tx(98, 98, hl, 'start'));
+  }
+  function figCircle(label, diam) {
+    var line = diam ? '<line x1="50" y1="95" x2="210" y2="95" stroke="var(--accent)" stroke-width="3"/>' + tx(130, 84, label)
+                    : '<line x1="130" y1="95" x2="210" y2="95" stroke="var(--accent)" stroke-width="3"/><circle cx="130" cy="95" r="3.5" fill="var(--accent)"/>' + tx(168, 118, label);
+    return svgWrap(280, 190, '<circle cx="130" cy="95" r="80" ' + SH + '/>' + line);
+  }
+  function figCube(sl) {
+    return svgWrap(280, 210, '<polygon points="40,70 140,70 170,40 70,40" ' + SH + '/><polygon points="140,70 170,40 170,140 140,170" ' + SH + '/><rect x="40" y="70" width="100" height="100" ' + SH + '/>' + tx(90, 194, sl));
+  }
+  function figCuboid(pl, ll, tl) {
+    return svgWrap(310, 210, '<g transform="translate(30,0)"><polygon points="30,70 170,70 210,40 70,40" ' + SH + '/><polygon points="170,70 210,40 210,120 170,150" ' + SH + '/><rect x="30" y="70" width="140" height="80" ' + SH + '/>' + tx(100, 174, pl) + tx(20, 115, tl, 'end') + tx(196, 28, ll, 'start') + '</g>');
+  }
+  function figRT(al, bl, cl, a, b) {
+    var k = 150 / Math.max(a, b), bw = Math.round(b * k), bh = Math.round(a * k);
+    if (bh > 125) { k = 125 / a; bw = Math.round(b * k); bh = 125; }
+    var x0 = 50, y0 = 160;
+    return svgWrap(280, 200, '<polygon points="' + x0 + ',' + y0 + ' ' + (x0 + bw) + ',' + y0 + ' ' + x0 + ',' + (y0 - bh) + '" ' + SH + '/>' + rightMark(x0, y0, 1, -1) + tx(x0 - 8, y0 - bh / 2 + 5, al, 'end') + tx(x0 + bw / 2, y0 + 24, bl) + tx(x0 + bw / 2 + 14, y0 - bh / 2 - 8, cl, 'start'));
+  }
+  function figGraph(o) {
+    var R = o.R || 6, S = 120 / R, O = 140;
+    var X = function (x) { return (O + x * S).toFixed(1); }, Y = function (y) { return (O - y * S).toFixed(1); };
+    var g = '<defs><clipPath id="gclip"><rect x="' + (O - R * S) + '" y="' + (O - R * S) + '" width="' + (2 * R * S) + '" height="' + (2 * R * S) + '"/></clipPath></defs>';
+    var st = R > 7 ? 2 : 1, i;
+    for (i = -R; i <= R; i++) {
+      if (i === 0) continue;
+      g += '<line x1="' + X(i) + '" y1="' + Y(-R) + '" x2="' + X(i) + '" y2="' + Y(R) + '" stroke="var(--line)" stroke-width="1"/>';
+      g += '<line x1="' + X(-R) + '" y1="' + Y(i) + '" x2="' + X(R) + '" y2="' + Y(i) + '" stroke="var(--line)" stroke-width="1"/>';
+    }
+    g += '<line x1="' + X(-R) + '" y1="' + O + '" x2="' + X(R) + '" y2="' + O + '" stroke="var(--ink)" stroke-width="2"/>';
+    g += '<line x1="' + O + '" y1="' + Y(-R) + '" x2="' + O + '" y2="' + Y(R) + '" stroke="var(--ink)" stroke-width="2"/>';
+    g += '<text x="' + (O + R * S + 4) + '" y="' + (O + 4) + '" font-size="13" font-weight="700" fill="var(--ink)">x</text>';
+    g += '<text x="' + (O + 6) + '" y="' + (O - R * S - 4) + '" font-size="13" font-weight="700" fill="var(--ink)">y</text>';
+    for (i = -R; i <= R; i++) {
+      if (i === 0 || i % st) continue;
+      g += '<text x="' + X(i) + '" y="' + (O + 14) + '" text-anchor="middle" font-size="10" fill="var(--muted)">' + fmt(i) + '</text>';
+      g += '<text x="' + (O - 5) + '" y="' + (Number(Y(i)) + 3.5) + '" text-anchor="end" font-size="10" fill="var(--muted)">' + fmt(i) + '</text>';
+    }
+    if (o.line) g += '<line clip-path="url(#gclip)" x1="' + X(-R) + '" y1="' + Y(o.line[0] * -R + o.line[1]) + '" x2="' + X(R) + '" y2="' + Y(o.line[0] * R + o.line[1]) + '" stroke="var(--brand)" stroke-width="3"/>';
+    (o.pts || []).forEach(function (p) {
+      g += '<circle cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="5" fill="var(--accent)" stroke="var(--ink)" stroke-width="1"/>';
+      if (p[2]) g += '<text x="' + (p[0] > R * 0.4 ? Number(X(p[0])) - 8 : Number(X(p[0])) + 8) + '" y="' + (Number(Y(p[1])) - 8) + '" text-anchor="' + (p[0] > R * 0.4 ? 'end' : 'start') + '" font-size="12" font-weight="700" fill="var(--ink)" font-family="JetBrains Mono, monospace">' + p[2] + '</text>';
+    });
+    return svgWrap(280, 280, g);
+  }
+  var withFig = function (q, f) { q.fig = f; return q; };
+  function uniqSet(fns) {
+    var seen = {};
+    return shuffle(fns).map(function (g) {
+      var q, t = 0;
+      do { q = g(); t++; } while (seen[q.text] && t < 20);
+      seen[q.text] = 1; return q;
+    });
+  }
+  function rep(g, n) { var a = []; for (var i = 0; i < n; i++) a.push(g); return a; }
+
+  var makeT1 = (function () {
+  var QTY = [
+    { n: 'Panjang', asas: true, note: 'Panjang ialah kuantiti asas. Unit SI ialah meter (m).' },
+    { n: 'Jisim', asas: true, note: 'Jisim ialah kuantiti asas. Unit SI ialah kilogram (kg).' },
+    { n: 'Masa', asas: true, note: 'Masa ialah kuantiti asas. Unit SI ialah saat (s).' },
+    { n: 'Arus elektrik', asas: true, note: 'Arus elektrik ialah kuantiti asas. Unit SI ialah ampere (A).' },
+    { n: 'Suhu', asas: true, note: 'Suhu ialah kuantiti asas. Unit SI ialah kelvin (K).' },
+    { n: 'Luas', asas: false, note: 'Luas ialah kuantiti terbitan. Unitnya m², dibina daripada panjang × panjang.' },
+    { n: 'Isipadu', asas: false, note: 'Isipadu ialah kuantiti terbitan. Unitnya m³, dibina daripada panjang × panjang × panjang.' },
+    { n: 'Laju', asas: false, note: 'Laju ialah kuantiti terbitan. Unitnya m/s, dibina daripada panjang ÷ masa.' },
+    { n: 'Ketumpatan', asas: false, note: 'Ketumpatan ialah kuantiti terbitan. Unitnya kg/m³, dibina daripada jisim ÷ isipadu.' }
+  ];
+  var nextQty = deck(QTY);
+  function genClassify() {
+    var q = nextQty();
+    var A = 'Kuantiti asas', T = 'Kuantiti terbitan';
+    return build('Kuantiti asas atau terbitan', q.n + ' ialah kuantiti yang mana satu?', q.asas ? A : T, [q.asas ? T : A], q.note, [A, T]);
+  }
+
+  var UNITS = [
+    { n: 'panjang', c: 'meter (m)', w: ['kilometer (km)', 'sentimeter (cm)', 'milimeter (mm)'] },
+    { n: 'jisim', c: 'kilogram (kg)', w: ['gram (g)', 'miligram (mg)', 'tan'] },
+    { n: 'masa', c: 'saat (s)', w: ['minit (min)', 'jam', 'milisaat (ms)'] },
+    { n: 'arus elektrik', c: 'ampere (A)', w: ['miliampere (mA)', 'volt (V)', 'watt (W)'] },
+    { n: 'suhu', c: 'kelvin (K)', w: ['darjah Celsius (°C)', 'darjah Fahrenheit (°F)', 'joule (J)'] }
+  ];
+  var nextUnit = deck(UNITS);
+  function genUnit() {
+    var u = nextUnit();
+    return build('Unit SI', 'Apakah unit SI bagi ' + u.n + '?', u.c, u.w,
+      'Unit SI bagi ' + u.n + ' ialah ' + u.c + '. Unit SI ialah unit asas tanpa awalan seperti kilo atau mili.');
+  }
+
+  function conv(t) {
+    var v = pick(t.vals);
+    var ans = t.op === '×' ? v * t.k : v / t.k;
+    var inv = t.op === '×' ? v / t.k : v * t.k;
+    return numQ('Tukar unit', 'Tukar ' + fmt(v) + ' ' + t.f + ' kepada ' + t.t + '.', ans, [ans * 10, ans / 10, inv, ans * 100], t.t,
+      t.rule + ', jadi ' + (t.op === '×' ? 'darab' : 'bahagi') + ' dengan ' + t.k + '. ' + fmt(v) + ' ' + t.op + ' ' + t.k + ' = ' + fmt(ans) + ' ' + t.t + '.');
+  }
+  var T1 = [
+    { f: 'km', t: 'm', op: '×', k: 1000, vals: [2, 3, 5, 7, 2.5, 0.5], rule: '1 km = 1000 m' },
+    { f: 'g', t: 'kg', op: '÷', k: 1000, vals: [2000, 3000, 4500, 6000, 500, 7500], rule: '1 kg = 1000 g' },
+    { f: 'jam', t: 'min', op: '×', k: 60, vals: [2, 3, 1.5, 4, 0.5], rule: '1 jam = 60 min' },
+    { f: 'A', t: 'mA', op: '×', k: 1000, vals: [0.5, 2, 0.25, 1.5], rule: '1 A = 1000 mA' },
+    { f: 'm', t: 'cm', op: '×', k: 100, vals: [2, 3.5, 12, 0.75], rule: '1 m = 100 cm' },
+    { f: 'min', t: 's', op: '×', k: 60, vals: [2, 5, 10, 1.5], rule: '1 min = 60 s' },
+    { f: 'kg', t: 'g', op: '×', k: 1000, vals: [2, 0.5, 3.5, 1.2], rule: '1 kg = 1000 g' },
+    { f: 'cm', t: 'm', op: '÷', k: 100, vals: [250, 400, 75, 1200], rule: '1 m = 100 cm' }
+  ];
+  var T2 = [
+    { f: 'm', t: 'mm', op: '×', k: 1000, vals: [2.4, 0.75, 3.6, 1.2], rule: '1 m = 1000 mm' },
+    { f: 's', t: 'jam', op: '÷', k: 3600, vals: [7200, 10800, 1800, 5400], rule: '1 jam = 3600 s' },
+    { f: 'mg', t: 'g', op: '÷', k: 1000, vals: [500, 2500, 4000, 750], rule: '1 g = 1000 mg' },
+    { f: 'mL', t: 'L', op: '÷', k: 1000, vals: [250, 1500, 3000, 750], rule: '1 L = 1000 mL' },
+    { f: 'L', t: 'mL', op: '×', k: 1000, vals: [0.5, 2.5, 1.2, 3], rule: '1 L = 1000 mL' },
+    { f: 'mA', t: 'A', op: '÷', k: 1000, vals: [250, 1500, 500, 2000], rule: '1 A = 1000 mA' },
+    { f: 'km', t: 'cm', op: '×', k: 100000, vals: [0.5, 1.2, 2, 0.25], rule: '1 km = 1000 m dan 1 m = 100 cm, jadi 1 km = 100 000 cm' },
+    { f: 'min', t: 'jam', op: '÷', k: 60, vals: [90, 150, 45, 120], rule: '1 jam = 60 min' }
+  ];
+  var nextT1 = deck(T1), nextT2 = deck(T2);
+  var genConv1 = function () { return conv(nextT1()); };
+  var genConv2 = function () { return conv(nextT2()); };
+
+  function genKelvin() {
+    var c = rnd(5, 95);
+    if (Math.random() < 0.5) {
+      var k = c + 273;
+      return numQ('Suhu', 'Tukar ' + c + ' °C kepada K.', k, [k + 10, k - 10, c - 273, k + 100], 'K', 'K = °C + 273. ' + c + ' + 273 = ' + k + ' K.');
+    }
+    var K = c + 273;
+    return numQ('Suhu', 'Tukar ' + K + ' K kepada °C.', c, [c + 10, c - 10, K + 273, c + 100], '°C', '°C = K − 273. ' + K + ' − 273 = ' + c + ' °C.');
+  }
+  function genFahrenheit() {
+    var c = pick([0, 10, 20, 25, 30, 35, 40, 50, 60, 80, 100]);
+    var f = 9 / 5 * c + 32;
+    return numQ('Suhu', 'Tukar ' + c + ' °C kepada °F.', f, [9 / 5 * c, c + 32, 5 / 9 * c + 32, f + 10], '°F',
+      '°F = 9/5 × °C + 32. 9/5 × ' + c + ' = ' + fmt(9 / 5 * c) + ', tambah 32 = ' + fmt(f) + ' °F.');
+  }
+  function genLaju() {
+    if (Math.random() < 0.6) {
+      var v = pick([18, 36, 54, 72, 90, 108, 126]);
+      var ms = v / 3.6;
+      return numQ('Laju', 'Tukar ' + v + ' km/j kepada m/s.', ms, [v * 3.6, v / 6, v / 36, v / 12], 'm/s',
+        v + ' km/j = ' + v + ' × 1000 m ÷ 3600 s = ' + fmt(ms) + ' m/s. Jalan pintas: bahagi 3.6.');
+    }
+    var m = pick([5, 10, 15, 20, 25, 30]);
+    var kj = m * 3.6;
+    return numQ('Laju', 'Tukar ' + m + ' m/s kepada km/j.', kj, [m / 3.6, m * 36, m * 6, m * 10], 'km/j',
+      m + ' m/s = ' + m + ' × 3600 ÷ 1000 = ' + fmt(kj) + ' km/j. Jalan pintas: darab 3.6.');
+  }
+  function genPotong() {
+    var s = pick([[3.6, 45, 8], [4.5, 30, 15], [2.4, 30, 8], [6, 50, 12], [5.4, 60, 9], [7.2, 90, 8]]);
+    var cm = Math.round(s[0] * 100);
+    return numQ('Soalan perkataan', 'Sebatang wayar ' + s[0] + ' m dipotong kepada keping ' + s[1] + ' cm setiap satu. Berapa keping yang diperoleh?', s[2],
+      [s[2] * 10, s[2] / 10, s[2] + 2], 'keping', 'Samakan unit dahulu: ' + s[0] + ' m = ' + cm + ' cm. ' + cm + ' ÷ ' + s[1] + ' = ' + s[2] + ' keping.');
+  }
+  function genJarak() {
+    var s = pick([[1.8, 15, 2], [3.6, 20, 3], [5.4, 30, 3], [2.7, 15, 3], [1.5, 10, 2.5], [4.8, 20, 4]]);
+    var wrongs = [s[0] * 1000 / s[1], s[0] / (s[1] / 60), s[0] / s[1]];
+    return numQ('Laju', 'Seorang pelari menempuh ' + s[0] + ' km dalam ' + s[1] + ' minit. Berapakah lajunya dalam m/s?', s[2], wrongs, 'm/s',
+      'Jarak = ' + s[0] + ' km = ' + fmt(s[0] * 1000) + ' m. Masa = ' + s[1] + ' min = ' + (s[1] * 60) + ' s. ' + fmt(s[0] * 1000) + ' ÷ ' + (s[1] * 60) + ' = ' + fmt(s[2]) + ' m/s.');
+  }
+
+  function makeSet() {
+    return uniqSet([].concat(rep(genClassify, 4), rep(genUnit, 4), rep(genConv1, 9), rep(genKelvin, 3)));
+  }
+
+
+  return makeSet;
+  })();
+
+  var makeT2 = (function () {
+  var LIM1 = 25, LIM2 = 40, PI = 22 / 7;
+
+  function areaRect() {
+    var p = rnd(4, 12), l = rnd(3, 9); while (l === p) l = rnd(3, 9);
+    var a = p * l;
+    return withFig(numQ('Luas dan perimeter', 'Cari luas segiempat tepat ' + p + ' cm × ' + l + ' cm.', a, [2 * (p + l), p + l, a / 2], 'cm²',
+      'Luas = p × l = ' + p + ' × ' + l + ' = ' + a + ' cm². Perimeter pula ialah 2(p + l).'), figRect(p + ' cm', l + ' cm', l / p));
+  }
+  function perimRect() {
+    var p = rnd(4, 12), l = rnd(3, 9); while (l === p) l = rnd(3, 9);
+    var a = 2 * (p + l);
+    return withFig(numQ('Luas dan perimeter', 'Cari perimeter segiempat tepat ' + p + ' cm × ' + l + ' cm.', a, [p * l, p + l, p + l + p], 'cm',
+      'Perimeter = 2(p + l) = 2 × (' + p + ' + ' + l + ') = 2 × ' + (p + l) + ' = ' + a + ' cm.'), figRect(p + ' cm', l + ' cm', l / p));
+  }
+  function areaSq() {
+    var s = rnd(3, 12);
+    return withFig(numQ('Luas dan perimeter', 'Cari luas segiempat sama bersisi ' + s + ' cm.', s * s, [4 * s, 2 * s, s + s * 2], 'cm²',
+      'Luas = s × s = ' + s + ' × ' + s + ' = ' + (s * s) + ' cm². Perimeter pula ialah 4s.'), figRect(s + ' cm', s + ' cm', 1));
+  }
+  function perimSq() {
+    var s = pick([3, 4.5, 5, 6.5, 8, 9]);
+    return withFig(numQ('Luas dan perimeter', 'Cari perimeter segiempat sama bersisi ' + s + ' cm.', 4 * s, [s * s, 2 * s, 3 * s], 'cm',
+      'Perimeter = 4 × s = 4 × ' + s + ' = ' + fmt(4 * s) + ' cm. Luas ialah s × s.'), figRect(s + ' cm', s + ' cm', 1));
+  }
+  function areaTri() {
+    var b = pick([6, 8, 10, 12, 14]), h = pick([4, 5, 6, 7, 9]);
+    return withFig(numQ('Luas dan perimeter', 'Cari luas segitiga dengan tapak ' + b + ' cm dan tinggi ' + h + ' cm.', b * h / 2, [b * h, b + h, (b + h) / 2], 'cm²',
+      'Luas = ½ × tapak × tinggi = ½ × ' + b + ' × ' + h + ' = ' + fmt(b * h / 2) + ' cm².'), figTri(b + ' cm', h + ' cm'));
+  }
+  function lilitan() {
+    var j = pick([7, 14, 21, 3.5]);
+    var a = 2 * PI * j;
+    return withFig(numQ('Bulatan', 'Cari lilitan bulatan berjejari ' + j + ' cm. (π = 22/7)', a, [PI * j * j, PI * j, 2 * PI * j * j], 'cm',
+      'Lilitan = 2πj = 2 × 22/7 × ' + j + ' = ' + fmt(a) + ' cm.'), figCircle('j = ' + j + ' cm', false));
+  }
+  function volCube() {
+    var s = rnd(2, 6);
+    return withFig(numQ('Isipadu', 'Cari isipadu kubus bersisi ' + s + ' cm.', s * s * s, [6 * s * s, 3 * s, s * s], 'cm³',
+      'Isipadu = s³ = ' + s + ' × ' + s + ' × ' + s + ' = ' + (s * s * s) + ' cm³.'), figCube(s + ' cm'));
+  }
+  function volCuboid() {
+    var p = pick([10, 8, 6, 5]), l = pick([5, 4, 3]), t = pick([2, 3, 4]);
+    return withFig(numQ('Isipadu', 'Cari isipadu kuboid ' + p + ' cm × ' + l + ' cm × ' + t + ' cm.', p * l * t, [2 * (p * l + p * t + l * t), p + l + t, p * l], 'cm³',
+      'Isipadu = p × l × t = ' + p + ' × ' + l + ' × ' + t + ' = ' + (p * l * t) + ' cm³.'), figCuboid(p + ' cm', l + ' cm', t + ' cm'));
+  }
+  function pythHip() {
+    var t = pick([[3, 4, 5], [5, 12, 13], [6, 8, 10], [9, 12, 15]]);
+    return withFig(numQ('Pythagoras', 'Dua sisi tegak segitiga bersudut tegak ialah ' + t[0] + ' cm dan ' + t[1] + ' cm. Cari hipotenus.', t[2], [t[0] + t[1], t[0] * t[0] + t[1] * t[1], t[1] - t[0]], 'cm',
+      'c² = a² + b² = ' + (t[0] * t[0]) + ' + ' + (t[1] * t[1]) + ' = ' + (t[2] * t[2]) + ', jadi c = ' + t[2] + ' cm.'), figRT(t[0] + ' cm', t[1] + ' cm', 'c = ?', t[0], t[1]));
+  }
+
+  function areaCircle() {
+    var d = pick([14, 28, 7]), j = d / 2, a = PI * j * j;
+    return withFig(numQ('Bulatan', 'Cari luas bulatan berdiameter ' + d + ' cm. (π = 22/7)', a, [PI * d * d, PI * j, 2 * PI * j], 'cm²',
+      'Jejari = ' + d + ' ÷ 2 = ' + j + ' cm. Luas = πj² = 22/7 × ' + j + ' × ' + j + ' = ' + fmt(a) + ' cm².'), figCircle('d = ' + d + ' cm', true));
+  }
+  function trapezium() {
+    var t = pick([[8, 12, 5], [6, 10, 4], [10, 14, 6], [5, 9, 8]]);
+    var a = (t[0] + t[1]) * t[2] / 2;
+    return numQ('Luas dan perimeter', 'Cari luas trapezium dengan sisi selari ' + t[0] + ' cm dan ' + t[1] + ' cm, tinggi ' + t[2] + ' cm.', a, [(t[0] + t[1]) * t[2], t[0] * t[1] * t[2] / 2, t[0] + t[1] + t[2]], 'cm²',
+      'Luas = ½ × (a + b) × tinggi = ½ × ' + (t[0] + t[1]) + ' × ' + t[2] + ' = ' + fmt(a) + ' cm².');
+  }
+  function pythSide() {
+    var t = pick([[17, 8, 15], [13, 5, 12], [10, 6, 8], [25, 7, 24], [26, 10, 24], [15, 9, 12]]);
+    return numQ('Pythagoras', 'Hipotenus sebuah segitiga bersudut tegak ialah ' + t[0] + ' cm dan satu sisi ialah ' + t[1] + ' cm. Cari sisi yang satu lagi.', t[2],
+      [t[0] - t[1], t[0] + t[1], t[0] * t[0] - t[1] * t[1]], 'cm',
+      'b² = c² − a² = ' + (t[0] * t[0]) + ' − ' + (t[1] * t[1]) + ' = ' + (t[2] * t[2]) + ', jadi b = ' + t[2] + ' cm.');
+  }
+  function berlorek() {
+    var s = pick([[20, 14, 7], [14, 14, 7], [28, 14, 7], [10, 7, 3.5], [12, 7, 3.5]]);
+    var r = s[0] * s[1], c = PI * s[2] * s[2];
+    return numQ('Luas gabungan', 'Sebuah segiempat tepat ' + s[0] + ' cm × ' + s[1] + ' cm mengandungi satu bulatan berjejari ' + s[2] + ' cm. Cari luas kawasan di luar bulatan.', r - c, [r, c, r + c], 'cm²',
+      'Luas segiempat = ' + r + ' cm². Luas bulatan = 22/7 × ' + s[2] + '² = ' + fmt(c) + ' cm². Beza = ' + fmt(r - c) + ' cm².');
+  }
+  function silinder() {
+    var s = pick([[7, 10], [7, 5], [14, 3], [3.5, 8]]);
+    var v = PI * s[0] * s[0] * s[1];
+    return numQ('Isipadu', 'Cari isipadu silinder berjejari ' + s[0] + ' cm dan tinggi ' + s[1] + ' cm. (π = 22/7)', v, [v / 3, 2 * PI * s[0] * s[1], PI * s[0] * s[1]], 'cm³',
+      'Isipadu = πj²t = 22/7 × ' + s[0] + '² × ' + s[1] + ' = ' + fmt(v) + ' cm³.');
+  }
+  function kon() {
+    var s = pick([[7, 24], [7, 12], [14, 6], [3.5, 12]]);
+    var v = PI * s[0] * s[0] * s[1] / 3;
+    return numQ('Isipadu', 'Cari isipadu kon berjejari ' + s[0] + ' cm dan tinggi tegak ' + s[1] + ' cm. (π = 22/7)', v, [v * 3, PI * s[0] * s[1] / 3, v / 3], 'cm³',
+      'Isipadu = ⅓πj²t = ⅓ × 22/7 × ' + s[0] + '² × ' + s[1] + ' = ' + fmt(v) + ' cm³.');
+  }
+  function konLP() {
+    var s = pick([[7, 24, 25], [14, 48, 50]]);
+    var a = PI * s[0] * s[0] + PI * s[0] * s[2];
+    return numQ('Luas permukaan', 'Sebuah kon berjejari ' + s[0] + ' cm dan tinggi tegak ' + s[1] + ' cm. Cari luas permukaannya. (π = 22/7)', a, [PI * s[0] * s[2], PI * s[0] * s[0], PI * s[0] * s[1] + PI * s[0] * s[0]], 'cm²',
+      'Tinggi condong s = √(' + s[0] + '² + ' + s[1] + '²) = ' + s[2] + ' cm. Luas = πj² + πjs = ' + fmt(PI * s[0] * s[0]) + ' + ' + fmt(PI * s[0] * s[2]) + ' = ' + fmt(a) + ' cm².');
+  }
+  function sfera() {
+    var j = pick([10.5, 21]);
+    var v = 4 / 3 * PI * j * j * j;
+    if (Math.random() < 0.5) {
+      var h = v / 2;
+      return numQ('Isipadu', 'Cari isipadu hemisfera berjejari ' + j + ' cm. (π = 22/7)', h, [v, 2 * PI * j * j, 4 * PI * j * j], 'cm³',
+        'Isipadu hemisfera = ⅔πj³ = ⅔ × 22/7 × ' + j + '³ = ' + fmt(h) + ' cm³.');
+    }
+    return numQ('Isipadu', 'Cari isipadu sfera berjejari ' + j + ' cm. (π = 22/7)', v, [v / 2, 4 * PI * j * j, PI * j * j * j], 'cm³',
+      'Isipadu sfera = 4/3 πj³ = 4/3 × 22/7 × ' + j + '³ = ' + fmt(v) + ' cm³.');
+  }
+  function piramid() {
+    var s = pick([[10, 12], [6, 9], [12, 5]]);
+    var v = s[0] * s[0] * s[1] / 3;
+    return numQ('Isipadu', 'Cari isipadu piramid bertapak segiempat sama bersisi ' + s[0] + ' cm dan tinggi tegak ' + s[1] + ' cm.', v, [v * 3, s[0] * s[1] / 3, s[0] * s[0] / 3], 'cm³',
+      'Isipadu = ⅓ × luas tapak × tinggi tegak = ⅓ × ' + (s[0] * s[0]) + ' × ' + s[1] + ' = ' + fmt(v) + ' cm³.');
+  }
+  function tangki() {
+    var s = pick([[0.7, 2], [0.7, 3], [1.4, 1], [0.35, 4]]);
+    var v = PI * s[0] * s[0] * s[1];
+    var l = v * 1000;
+    return numQ('Soalan perkataan', 'Sebuah tangki silinder berjejari ' + s[0] + ' m dan tinggi ' + s[1] + ' m. Berapa liter air boleh dimuatkan? (1 m³ = 1000 liter, π = 22/7)', l, [v, l / 10, l * 10], 'liter',
+      'Isipadu = πj²t = 22/7 × ' + s[0] + '² × ' + s[1] + ' = ' + fmt(v) + ' m³. Darab 1000 = ' + fmt(l) + ' liter.');
+  }
+
+  function makeSet() {
+    return uniqSet([].concat(rep(areaRect, 2), rep(perimRect, 2), rep(perimSq, 2), rep(areaSq, 2), rep(areaTri, 2), rep(volCube, 2), rep(volCuboid, 2), rep(lilitan, 2), rep(areaCircle, 2), rep(pythHip, 2)));
+  }
+
+  return makeSet;
+  })();
+
+  var makeT3 = (function () {
+  var LIM1 = 25, LIM2 = 40;
+
+  function istilah() {
+    var a = rnd(2, 9), b = rnd(2, 9) * pick([1, -1]), c = rnd(1, 9);
+    var ex = poly([[a, 'x'], [b, 'y'], [c, '']]);
+    var kind = pick(['bil', 'x', 'y', 'c']);
+    var note = 'Dalam ' + ex + ', sebutannya ialah ' + poly([[a, 'x']]) + ', ' + poly([[b, 'y']]) + ' dan ' + c + '. Pekali ialah nombor di depan pembolehubah, pemalar ialah nombor yang berdiri sendiri.';
+    if (kind === 'bil') return numQ('Istilah algebra', 'Bagi ' + ex + ', berapakah bilangan sebutan?', 3, [2, 4, 5], '', note);
+    if (kind === 'x') return numQ('Istilah algebra', 'Bagi ' + ex + ', apakah pekali x?', a, [b, c, 1], '', note);
+    if (kind === 'y') return numQ('Istilah algebra', 'Bagi ' + ex + ', apakah pekali y?', b, [-b, a, c], '', note);
+    return numQ('Istilah algebra', 'Bagi ' + ex + ', apakah pemalar?', c, [a, b, -c], '', note);
+  }
+  function ungkapan() {
+    var a = rnd(2, 9), c = rnd(1, 9), r = c + a * rnd(2, 5);
+    var ex = poly([[a, 'x'], [c, '']]);
+    var eq = Math.random() < 0.5;
+    var text = 'Nyatakan sama ada ungkapan atau persamaan: ' + (eq ? ex + ' = ' + r : ex);
+    return build('Istilah algebra', text, eq ? 'Persamaan' : 'Ungkapan', [eq ? 'Ungkapan' : 'Persamaan'],
+      eq ? 'Ada tanda sama dengan, jadi ini persamaan.' : 'Tiada tanda sama dengan, jadi ini ungkapan.', ['Ungkapan', 'Persamaan']);
+  }
+  function simplify() {
+    var v = pick(['a', 'x', 'y', 'p']), k = rnd(3, 9), m = rnd(2, k - 1);
+    if (Math.random() < 0.5) {
+      var s = k + m;
+      return build('Permudahkan', 'Permudahkan ' + k + v + ' + ' + m + v + '.', s + v, [(k * m) + v, s + v + '²', (k - m) + v],
+        'Sebutan serupa: tambah pekali sahaja. ' + k + ' + ' + m + ' = ' + s + ', jadi ' + s + v + '.');
+    }
+    var d = k - m;
+    return build('Permudahkan', 'Permudahkan ' + k + v + ' − ' + m + v + '.', poly([[d, v]]), [(k + m) + v, (k * m) + v, d + v + '²'],
+      'Sebutan serupa: tolak pekali sahaja. ' + k + ' − ' + m + ' = ' + d + ', jadi ' + poly([[d, v]]) + '.');
+  }
+  function kembang() {
+    var k = rnd(2, 6), n = rnd(2, 9);
+    var ans = poly([[k, 'x'], [k * n, '']]);
+    return build('Kembangkan', 'Kembangkan ' + k + '(' + poly([[1, 'x'], [n, '']]) + ').', ans,
+      [poly([[k, 'x'], [n, '']]), poly([[1, 'x'], [k * n, '']]), poly([[k + n, 'x']])],
+      'Darab ' + k + ' dengan setiap sebutan dalam kurungan: ' + k + ' × x = ' + k + 'x dan ' + k + ' × ' + fmt(n) + ' = ' + fmt(k * n) + '. Jawapan: ' + ans + '.');
+  }
+  function gantian1() {
+    var a = rnd(2, 5), b = rnd(1, 9), x = rnd(2, 6), y = a * x + b;
+    return numQ('Gantian nilai', 'Jika y = ' + poly([[a, 'x'], [b, '']]) + ' dan x = ' + x + ', cari nilai y.', y, [a * x - b, a * (x + b), a + x + b, a * x], '',
+      'y = ' + a + ' × ' + x + ' + ' + b + ' = ' + a * x + ' + ' + b + ' = ' + y + '.', 'y = ');
+  }
+  function selesai1() {
+    var t = rnd(1, 3), a = rnd(2, 9);
+    if (t === 1) { var b = a + rnd(2, 8); return numQ('Selesaikan persamaan', 'Selesaikan x + ' + a + ' = ' + b + '.', b - a, [b + a, a - b, a * b], '', 'Tolak ' + a + ' daripada kedua-dua belah: x = ' + b + ' − ' + a + ' = ' + (b - a) + '.', 'x = '); }
+    if (t === 2) { var c = rnd(2, 9); return numQ('Selesaikan persamaan', 'Selesaikan x − ' + a + ' = ' + c + '.', c + a, [c - a, a * c, a - c], '', 'Tambah ' + a + ' pada kedua-dua belah: x = ' + c + ' + ' + a + ' = ' + (c + a) + '.', 'x = '); }
+    var x0 = rnd(2, 9), n = rnd(2, 6) , bb = n * x0;
+    return numQ('Selesaikan persamaan', 'Selesaikan ' + n + 'x = ' + bb + '.', x0, [bb - n, bb * n, n * x0 + n], '', 'Bahagi kedua-dua belah dengan ' + n + ': x = ' + bb + ' ÷ ' + n + ' = ' + x0 + '.', 'x = ');
+  }
+
+  function subBr() {
+    var p = rnd(4, 9), r = rnd(1, p - 1), q = rnd(1, 6), s = rnd(1, 6);
+    var ex = '(' + poly([[p, 'a'], [q, 'b']]) + ') − (' + poly([[r, 'a'], [-s, 'b']]) + ')';
+    var ans = poly([[p - r, 'a'], [q + s, 'b']]);
+    return build('Permudahkan', 'Permudahkan ' + ex + '.', ans,
+      [poly([[p - r, 'a'], [q - s, 'b']]), poly([[p + r, 'a'], [q + s, 'b']]), poly([[p - r, 'a'], [-(q + s), 'b']])],
+      'Buka kurungan, tanda dalam kurungan kedua bertukar: ' + poly([[p, 'a'], [q, 'b'], [-r, 'a'], [s, 'b']]) + '. Kumpul sebutan serupa: ' + ans + '.');
+  }
+  function expandCombo() {
+    var k = pick([2, 3, 4]), p = pick([1, 2]), q = rnd(1, 4), m = pick([2, 3, 4]), n = rnd(1, 5);
+    var X = k * p + m, C = -k * q + m * n;
+    if (C === 0) return expandCombo();
+    var ex = k + '(' + poly([[p, 'x'], [-q, '']]) + ') + ' + m + '(' + poly([[1, 'x'], [n, '']]) + ')';
+    var ans = poly([[X, 'x'], [C, '']]);
+    return build('Permudahkan', 'Permudahkan ' + ex + '.', ans,
+      [poly([[X, 'x'], [-k * q + n, '']]), poly([[X, 'x'], [k * q + m * n, '']]), poly([[X, 'x'], [-k * q - m * n, '']])],
+      'Kembang: ' + poly([[k * p, 'x'], [-k * q, '']]) + ' + ' + poly([[m, 'x'], [m * n, '']]) + '. Kumpul sebutan serupa: ' + ans + '.');
+  }
+  function twoBracket() {
+    var a = rnd(2, 6), c = nonzero(-5, 5);
+    if (a + c === 0) return twoBracket();
+    var ex = '(x + ' + a + ')(x ' + (c < 0 ? '−' : '+') + ' ' + Math.abs(c) + ')';
+    var ans = poly([[1, 'x²'], [a + c, 'x'], [a * c, '']]);
+    return build('Kembangkan', 'Kembangkan ' + ex + '.', ans,
+      [poly([[1, 'x²'], [a * c, 'x'], [a + c, '']]), poly([[1, 'x²'], [a + c, 'x']]), poly([[1, 'x²'], [a + c, 'x'], [-a * c, '']])],
+      'Darab setiap sebutan dengan setiap sebutan: x² ' + (c < 0 ? '− ' : '+ ') + Math.abs(c) + 'x + ' + a + 'x + (' + fmt(a * c) + '). Kumpul sebutan serupa: ' + ans + '.');
+  }
+  function bahagi() {
+    var k = rnd(2, 5), m = rnd(2, 6), n = rnd(2, 6);
+    var ans = poly([[m, 'x'], [-n, '']]);
+    return build('Pembahagian', 'Permudahkan (' + poly([[k * m, 'x²'], [-k * n, 'x']]) + ') ÷ ' + k + 'x.', ans,
+      [poly([[m, 'x'], [-k * n, '']]), poly([[m, 'x²'], [-n, 'x']]), poly([[m, 'x'], [n, '']])],
+      'Bahagi setiap sebutan dengan ' + k + 'x: ' + poly([[k * m, 'x²']]) + ' ÷ ' + k + 'x = ' + poly([[m, 'x']]) + ' dan ' + poly([[k * n, 'x']]) + ' ÷ ' + k + 'x = ' + n + '. Jawapan: ' + ans + '.');
+  }
+  var RUMUS = [
+    { eq: 'V = IR', sub: 'R', ans: 'R = V ÷ I', w: ['R = V × I', 'R = I ÷ V', 'R = V − I'], work: 'Bahagi kedua-dua belah dengan I.' },
+    { eq: 'v = u + at', sub: 'u', ans: 'u = v − at', w: ['u = v + at', 'u = at − v', 'u = (v − a)t'], work: 'Tolak at daripada kedua-dua belah.' },
+    { eq: 'F = ma', sub: 'a', ans: 'a = F ÷ m', w: ['a = F × m', 'a = m ÷ F', 'a = F − m'], work: 'Bahagi kedua-dua belah dengan m.' },
+    { eq: 'P = 2(l + w)', sub: 'l', ans: 'l = P ÷ 2 − w', w: ['l = 2P − w', 'l = P − 2w', 'l = P ÷ 2 + w'], work: 'Bahagi dengan 2 untuk dapat P ÷ 2 = l + w, kemudian tolak w.' },
+    { eq: 'A = ½bh', sub: 'b', ans: 'b = 2A ÷ h', w: ['b = A ÷ 2h', 'b = 2Ah', 'b = A ÷ h'], work: 'Darab dengan 2 untuk dapat 2A = bh, kemudian bahagi dengan h.' }
+  ];
+  var nextRumus = deck(RUMUS);
+  function perkara() {
+    var r = nextRumus();
+    return build('Perkara rumus', 'Jadikan ' + r.sub + ' perkara rumus bagi ' + r.eq + '.', r.ans, r.w, r.work + ' Jawapan: ' + r.ans + '.');
+  }
+  function gantian2() {
+    var s = pick([[3, 4, 2], [2, 3, 4], [5, 2, 6], [4, 5, 2]]);
+    var u = s[0], t = s[1], a = s[2], v = u * t + 0.5 * a * t * t;
+    return numQ('Gantian nilai', 'Jika s = ut + ½at², cari s apabila u = ' + u + ', t = ' + t + ' dan a = ' + a + '.', v, [u * t + a * t * t, u * t + 0.5 * a * t, u + t + a], '',
+      's = ' + u + ' × ' + t + ' + ½ × ' + a + ' × ' + t + '² = ' + (u * t) + ' + ' + (0.5 * a * t * t) + ' = ' + v + '.', 's = ');
+  }
+  function selesaiBr() {
+    var a = pick([3, 4, 5]), c = pick([1, 2]), b = rnd(1, 5), x0 = rnd(2, 12);
+    var d = a * (x0 - b) - c * x0;
+    if (d === 0) return selesaiBr();
+    var rhs = poly([[c, 'x'], [d, '']]);
+    return numQ('Selesaikan persamaan', 'Selesaikan ' + a + '(x − ' + b + ') = ' + rhs + '.', x0, [x0 + 1, x0 - 1, -x0, x0 + 2], '',
+      'Kembang: ' + poly([[a, 'x'], [-a * b, '']]) + ' = ' + rhs + '. Kumpul x di kiri: ' + poly([[a - c, 'x']]) + ' = ' + (d + a * b) + '. Jadi x = ' + x0 + '.', 'x = ');
+  }
+
+  function makeSet() {
+    return uniqSet([].concat(rep(istilah, 4), rep(ungkapan, 2), rep(simplify, 4), rep(kembang, 3), rep(gantian1, 3), rep(selesai1, 4)));
+  }
+
+  return makeSet;
+  })();
+
+  var makeT4 = (function () {
+  var LIM1 = 25, LIM2 = 40;
+  var pt = function (x, y) { return '(' + fmt(x) + ', ' + fmt(y) + ')'; };
+
+  function linearOrNot() {
+    var L = ['y = 4x − 1', '2x + y = 7', 'y = −3x + 5', 'x + 2y = 8', '3x − y = 2', 'y = x + 6'];
+    var N = ['y = x²', 'y = x³ + 1', 'xy = 6', 'y = x² − 4', 'y = 2x²'];
+    var lin = Math.random() < 0.5, e = lin ? pick(L) : pick(N);
+    return build('Persamaan linear', 'Persamaan ' + e + ' ialah linear atau bukan linear?', lin ? 'Linear' : 'Bukan linear', [lin ? 'Bukan linear' : 'Linear'],
+      lin ? 'Kuasa tertinggi pembolehubah ialah 1, jadi grafnya garis lurus.' : 'Ada kuasa lebih daripada 1 atau hasil darab dua pembolehubah, jadi grafnya bukan garis lurus.', ['Linear', 'Bukan linear']);
+  }
+  function mc() {
+    var m = nonzero(-3, 3), c = nonzero(-4, 4);
+    var e = eqY(m, c), g = figGraph({ R: 6, line: [m, c] });
+    if (Math.random() < 0.5) return withFig(numQ('Bentuk y = mx + c', 'Bagi ' + e + ', apakah kecerunan (m)?', m, [c, -m, m + c], '', 'Dalam y = mx + c, m ialah pekali x. Di sini m = ' + fmt(m) + '.', 'm = '), g);
+    return withFig(numQ('Bentuk y = mx + c', 'Bagi ' + e + ', apakah pintasan-y (c)?', c, [m, -c, m + c], '', 'Dalam y = mx + c, c ialah pemalar. Di sini c = ' + fmt(c) + '. Pada graf, garis memotong paksi-y di y = ' + fmt(c) + '.', 'c = '), g);
+  }
+  function naikTurun() {
+    var m = pick([-3, -2, -1, 0, 1, 2, 3]);
+    var A = m > 0 ? 'Naik' : m < 0 ? 'Turun' : 'Mengufuk';
+    return withFig(build('Bentuk garis', 'Sebuah garis berkecerunan ' + fmt(m) + '. Bagaimanakah garis itu dari kiri ke kanan?', A, ['Naik', 'Turun', 'Mengufuk'],
+      m > 0 ? 'Kecerunan positif, garis naik.' : m < 0 ? 'Kecerunan negatif, garis turun.' : 'Kecerunan sifar, garis mengufuk.', ['Naik', 'Turun', 'Mengufuk']), figGraph({ R: 5, line: [m, 0] }));
+  }
+  function kuadran() {
+    var x = nonzero(-6, 6), y = nonzero(-6, 6);
+    var q = x > 0 && y > 0 ? 'Kuadran I' : x < 0 && y > 0 ? 'Kuadran II' : x < 0 && y < 0 ? 'Kuadran III' : 'Kuadran IV';
+    var all = ['Kuadran I', 'Kuadran II', 'Kuadran III', 'Kuadran IV'];
+    return withFig(build('Satah Cartes', 'Titik ' + pt(x, y) + ' terletak dalam kuadran yang mana?', q, all,
+      'x ' + (x > 0 ? 'positif' : 'negatif') + ' dan y ' + (y > 0 ? 'positif' : 'negatif') + ', jadi ' + q + '. I (+, +), II (−, +), III (−, −), IV (+, −).', all), figGraph({ R: 6, pts: [[x, y, pt(x, y)]] }));
+  }
+  function pintasanY() {
+    var m = nonzero(-3, 3), c = nonzero(-5, 5);
+    return withFig(numQ('Pintasan', 'Cari pintasan-y bagi ' + eqY(m, c) + '.', c, [m, -c, m + c], '', 'Pintasan-y ialah nilai y apabila x = 0, iaitu pemalar c = ' + fmt(c) + '.'), figGraph({ R: 6, line: [m, c], pts: [[0, c, '']] }));
+  }
+  function titikPadaGaris() {
+    var m = pick([-2, -1, 1, 2]), c = rnd(-3, 3), x = rnd(1, 3), y = m * x + c, on = Math.random() < 0.5;
+    var py = on ? y : y + pick([-2, -1, 1, 2]);
+    return withFig(build('Titik pada garis', 'Adakah titik ' + pt(x, py) + ' terletak pada garis ' + eqY(m, c) + '?', on ? 'Ya' : 'Tidak', [on ? 'Tidak' : 'Ya'],
+      'Ganti x = ' + x + ': y = ' + fmt(m) + '(' + x + ')' + (c === 0 ? '' : (c < 0 ? ' − ' : ' + ') + Math.abs(c)) + ' = ' + fmt(y) + '. ' + (on ? 'Sama dengan ' + fmt(py) + ', jadi ya.' : 'Titik itu ada y = ' + fmt(py) + ', jadi tidak.'), ['Ya', 'Tidak']), figGraph({ R: Math.max(5, Math.ceil(Math.max(Math.abs(x), Math.abs(py))) + 1), line: [m, c], pts: [[x, py, pt(x, py)]] }));
+  }
+  function slope(neg) {
+    var m = neg ? nonzero(-4, 4) : rnd(1, 4), x1 = neg ? rnd(-4, 2) : rnd(0, 3), y1 = neg ? rnd(-3, 6) : rnd(0, 5), dx = neg ? rnd(2, 5) : rnd(1, 3);
+    var x2 = x1 + dx, y2 = y1 + m * dx;
+    return numQ('Kecerunan', 'Cari kecerunan garis yang melalui ' + pt(x1, y1) + ' dan ' + pt(x2, y2) + '.', m, [-m, 1 / m, m * dx, dx], '',
+      'm = (y₂ − y₁) ÷ (x₂ − x₁) = (' + fmt(y2) + ' − ' + (y1 < 0 ? '(' + fmt(y1) + ')' : fmt(y1)) + ') ÷ (' + fmt(x2) + ' − ' + (x1 < 0 ? '(' + fmt(x1) + ')' : fmt(x1)) + ') = ' + fmt(m * dx) + ' ÷ ' + dx + ' = ' + fmt(m) + '.', 'm = ');
+  }
+  function slopeE() {
+    var m = rnd(1, 2), x1 = rnd(0, 3), y1 = rnd(0, 3), dx = rnd(1, 3), x2 = x1 + dx, y2 = y1 + m * dx;
+    var R = Math.max(5, Math.ceil(Math.max(x2, y2)) + 1);
+    return withFig(numQ('Kecerunan', 'Cari kecerunan garis yang melalui ' + pt(x1, y1) + ' dan ' + pt(x2, y2) + '.', m, [-m, 1 / m, m * dx, dx], '',
+      'm = (y₂ − y₁) ÷ (x₂ − x₁) = (' + fmt(y2) + ' − ' + fmt(y1) + ') ÷ (' + fmt(x2) + ' − ' + fmt(x1) + ') = ' + fmt(m * dx) + ' ÷ ' + dx + ' = ' + fmt(m) + '.', 'm = '),
+      figGraph({ R: R, line: [m, y1 - m * x1], pts: [[x1, y1, pt(x1, y1)], [x2, y2, pt(x2, y2)]] }));
+  }
+  var slope1 = function () { return slope(false); };
+  var slope2 = function () { return slope(true); };
+
+  function susun() {
+    var m = pick([-1, -2, -3, -4]), b = pick([2, 3, 4]), c = nonzero(-4, 6);
+    var a = -m * b, k = c * b;
+    var eq = poly([[a, 'x'], [b, 'y']]) + ' = ' + fmt(k);
+    var ans = eqY(m, c);
+    return build('Susun semula', 'Susun ' + eq + ' kepada bentuk y = mx + c.', ans, [eqY(-m, c), eqY(m, k), eqY(m, -c), eqY(m, c + 1)],
+      'Pindah ' + poly([[a, 'x']]) + ' ke kanan: ' + b + 'y = ' + poly([[-a, 'x'], [k, '']]) + '. Bahagi semua dengan ' + b + ': ' + ans + '.');
+  }
+  function melaluiTitik() {
+    var m = pick([2, 3, 4, -1, -2, -3]), x1 = rnd(-2, 4), y1 = rnd(-3, 7), c = y1 - m * x1;
+    var ans = eqY(m, c);
+    return build('Persamaan garis', 'Tulis persamaan garis lurus berkecerunan ' + fmt(m) + ' yang melalui ' + pt(x1, y1) + '.', ans,
+      [eqY(m, y1 + m * x1), eqY(m, y1), eqY(m, -c), eqY(-m, c), eqY(m, c + 1), eqY(m + 1, c)],
+      'y − y₁ = m(x − x₁): ' + lhs('y', y1) + ' = ' + fmt(m) + '(' + lhs('x', x1) + '). Kembang dan susun: ' + ans + '.');
+  }
+  function duaTitik() {
+    var m = pick([-3, -2, -1, 1, 2, 3, 4]), c = rnd(-3, 6), x1 = pick([0, 1, 2]), dx = rnd(1, 3);
+    var y1 = m * x1 + c, x2 = x1 + dx, y2 = m * x2 + c;
+    var ans = eqY(m, c);
+    return build('Persamaan garis', 'Tulis persamaan garis lurus yang melalui ' + pt(x1, y1) + ' dan ' + pt(x2, y2) + '.', ans,
+      [eqY(m, y1), eqY(-m, c), eqY(m, -c), eqY(m + 1, c), eqY(m, c + 1), eqY(m, c - 1)],
+      'Kecerunan m = (' + fmt(y2) + ' − ' + (y1 < 0 ? '(' + fmt(y1) + ')' : fmt(y1)) + ') ÷ (' + x2 + ' − ' + x1 + ') = ' + fmt(m) + '. Guna titik ' + pt(x1, y1) + ': ' + lhs('y', y1) + ' = ' + fmt(m) + '(' + lhs('x', x1) + '). Jawapan: ' + ans + '.');
+  }
+  function pintasanPair() {
+    var D = [2, 3, 4, 6, 8, 12], px = pick(D), py = pick(D);
+    while (py === px) py = pick(D);
+    var a = 24 / px, b = 24 / py;
+    var ans = '(' + px + ', 0) dan (0, ' + py + ')';
+    return build('Pintasan', 'Cari pintasan-x dan pintasan-y bagi ' + a + 'x + ' + b + 'y = 24.', ans,
+      ['(0, ' + px + ') dan (' + py + ', 0)', '(' + a + ', 0) dan (0, ' + b + ')', '(' + py + ', 0) dan (0, ' + px + ')'],
+      'Pintasan-x: letak y = 0, ' + a + 'x = 24, x = ' + px + '. Pintasan-y: letak x = 0, ' + b + 'y = 24, y = ' + py + '.');
+  }
+  function pintasanX() {
+    var m = pick([2, 3, 4, -2, -3]), x0 = rnd(2, 6), c = -m * x0;
+    return numQ('Pintasan', 'Cari pintasan-x bagi ' + eqY(m, c) + '.', x0, [c, -c, -x0, m * c], '',
+      'Pintasan-x ialah nilai x apabila y = 0: 0 = ' + poly([[m, 'x'], [c, '']]) + ', jadi x = ' + x0 + '.');
+  }
+  function cariM() {
+    var m = pick([2, 3, 4, -2, -3]), c = rnd(1, 5), x = rnd(2, 5), y = m * x + c;
+    return numQ('Kecerunan', 'Garis y = mx + ' + c + ' melalui titik ' + pt(x, y) + '. Cari nilai m.', m, [(y + c) / x, y / x, m + 1, m - 1], '',
+      'Ganti: ' + fmt(y) + ' = m(' + x + ') + ' + c + '. ' + x + 'm = ' + fmt(y - c) + ', jadi m = ' + fmt(m) + '.', 'm = ');
+  }
+  function jadual() {
+    var m = pick([-1, -2, 2, 3]), c = rnd(1, 6), x = rnd(1, 5), y = m * x + c;
+    return numQ('Jadual nilai', 'Bagi ' + eqY(m, c) + ', cari nilai y apabila x = ' + x + '.', y, [m * x - c, m * x, x + c, m + c], '',
+      'y = ' + fmt(m) + '(' + x + ') + ' + c + ' = ' + fmt(m * x) + ' + ' + c + ' = ' + fmt(y) + '.', 'y = ');
+  }
+
+  function makeSet() {
+    return uniqSet([].concat(rep(linearOrNot, 2), rep(mc, 4), rep(naikTurun, 2), rep(kuadran, 3), rep(pintasanY, 3), rep(jadual, 2), rep(titikPadaGaris, 2), rep(slopeE, 2)));
+  }
+
+  return makeSet;
+  })();
+
+
+
+
+  /* ---------- Data topik ---------- */
+  var TOP = [
+    { k: 't1', n: 'Topik 1', name: 'Kuantiti dan Unit Asas', desc: 'Unit SI, penukaran unit, suhu dan laju.', make: makeT1, rank: 'Jurutera Unit',
+      ref: [['Panjang', '1 km = 1000 m · 1 m = 100 cm · 1 cm = 10 mm'], ['Jisim', '1 kg = 1000 g'], ['Masa', '1 jam = 60 min · 1 min = 60 s'], ['Arus', '1 A = 1000 mA'], ['Suhu', 'K = °C + 273 · °F = 9/5 × °C + 32'], ['Laju', 'km/j ÷ 3.6 = m/s']] },
+    { k: 't2', n: 'Topik 2', name: 'Pengukuran', desc: 'Perimeter, luas, isipadu dan Pythagoras, dengan gambarajah.', make: makeT2, rank: 'Jurutera Ukur',
+      ref: [['Segitiga', 'Luas = ½ × tapak × tinggi'], ['Segiempat tepat', 'Perimeter = 2(p + l) · Luas = p × l'], ['Bulatan (π = 22/7)', 'Lilitan = 2πj · Luas = πj²'], ['Trapezium', 'Luas = ½(a + b) × tinggi'], ['Pythagoras', 'c² = a² + b²'], ['Kubus / kuboid', 'Isipadu = s³ / p × l × t'], ['Silinder', 'Isipadu = πj²t'], ['Kon', 'Isipadu = ⅓πj²t · s = √(j² + t²)'], ['Sfera', 'Isipadu = 4/3 πj³'], ['Piramid', 'Isipadu = ⅓ × luas tapak × tinggi']] },
+    { k: 't3', n: 'Topik 3', name: 'Persamaan Algebra', desc: 'Istilah, kembangkan, perkara rumus dan selesaikan persamaan.', make: makeT3, rank: 'Pakar Algebra',
+      ref: [['Istilah', 'Pekali = nombor di depan pembolehubah · pemalar = nombor tanpa pembolehubah'], ['Sebutan serupa', 'Tambah atau tolak pekali sahaja'], ['Kurungan', 'k(x + n) = kx + kn'], ['Dua kurungan', '(a + b)(c + d) = ac + ad + bc + bd'], ['Perkara rumus', 'Buat operasi songsang pada kedua-dua belah'], ['Selesaikan', 'Kumpul x di satu belah, pemalar di belah lain']] },
+    { k: 't4', n: 'Topik 4', name: 'Persamaan Linear', desc: 'Kecerunan, pintasan, kuadran dan graf garis lurus, dengan gambarajah.', make: makeT4, rank: 'Pakar Graf',
+      ref: [['Bentuk am', 'y = mx + c · m = kecerunan, c = pintasan-y'], ['Kecerunan', 'm = (y₂ − y₁) ÷ (x₂ − x₁)'], ['Satu titik', 'y − y₁ = m(x − x₁)'], ['Pintasan-x', 'Letak y = 0'], ['Pintasan-y', 'Letak x = 0'], ['Kuadran', 'I (+, +) · II (−, +) · III (−, −) · IV (+, −)']] }
+  ];
+
+  /* ---------- Simpanan setempat dan sambungan ---------- */
+  var LS = 'misi-matematik-sbm10022';
+  var local = { nama: '', kump: '', best: {} };
+  try { var raw = localStorage.getItem(LS); if (raw) { var p = JSON.parse(raw); if (p && typeof p === 'object') local = { nama: p.nama || '', kump: p.kump || '', best: p.best || {} }; } } catch (e) {}
+  function saveLocal() { try { localStorage.setItem(LS, JSON.stringify(local)); } catch (e) {} }
+
+  /* ---------- Keadaan permainan ---------- */
+  var st = null;
+  function show(id) {
+    ['s-home', 's-game', 's-end'].forEach(function (s) { $('#' + s).hidden = (s !== id); });
+    $('#top-label').textContent = (st && id !== 's-home') ? st.topic.n + ' · ' + st.topic.name : 'Misi latihan';
+    window.scrollTo(0, 0);
+  }
+  function ready() { return !!(($('#inp-nama').value || '').trim() && ($('#inp-kump').value || '').trim()); }
+  function drawTopics() {
+    $('#gate').hidden = ready();
+    var box = $('#topics');
+    box.innerHTML = '';
+    TOP.forEach(function (t) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'topic'; b.disabled = !ready();
+      var h = document.createElement('h3'); h.textContent = t.n + ' · ' + t.name;
+      var d = document.createElement('p'); d.className = 'desc'; d.textContent = t.desc;
+      var r = local.best[t.k];
+      var bl = document.createElement('p'); bl.className = 'bestline' + (r ? '' : ' none');
+      bl.textContent = r ? 'Terbaik: ' + r.markah + ' mata · ' + r.betul + '/' + r.jumlah + ' betul' : 'Belum dicuba';
+      b.appendChild(h); b.appendChild(d); b.appendChild(bl);
+      b.addEventListener('click', function () { start(t); });
+      box.appendChild(b);
+    });
+  }
+  function drawHud() {
+    $('#score').textContent = st.score;
+    $('#qno').textContent = 'Soalan ' + (st.i + 1) + ' / ' + TOTAL;
+    $('#prog').style.width = (st.i / TOTAL * 100) + '%';
+    var c = $('#combo');
+    if (st.streak >= 3) { c.hidden = false; c.textContent = 'Kombo ×' + (st.streak >= 5 ? 2 : 1.5); } else { c.hidden = true; }
+  }
+  function drawRef() {
+    var t = $('#reftable');
+    t.innerHTML = '<tr><th>Topik</th><th>Ingat</th></tr>';
+    st.topic.ref.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var a = document.createElement('td'); a.textContent = r[0];
+      var b = document.createElement('td'); b.textContent = r[1];
+      tr.appendChild(a); tr.appendChild(b); t.appendChild(tr);
+    });
+  }
+
+  function start(topic) {
+    if (!ready()) { drawTopics(); return; }
+    st = { topic: topic, i: 0, score: 0, streak: 0, correct: 0, qs: topic.make(), answered: false, missed: [], done: 0 };
+    drawRef();
+    show('s-game');
+    nextQuestion();
+  }
+  function nextQuestion() {
+    var q = st.qs[st.i];
+    st.answered = false;
+    $('#qfig').hidden = !q.fig;
+    $('#qfig').innerHTML = q.fig || '';
+    $('#qtag').textContent = q.tag;
+    $('#qtext').textContent = q.text;
+    $('#fb').hidden = true;
+    var box = $('#opts');
+    box.innerHTML = '';
+    q.opts.forEach(function (o, idx) {
+      var b = document.createElement('button');
+      b.className = 'opt'; b.type = 'button';
+      b.innerHTML = '<span class="key">' + (idx + 1) + '</span><span></span>';
+      b.lastChild.textContent = o.label;
+      b.addEventListener('click', function () { answer(idx); });
+      box.appendChild(b);
+    });
+    drawHud();
+  }
+  function answer(idx) {
+    if (st.answered) return;
+    st.answered = true;
+    st.done++;
+    var q = st.qs[st.i];
+    var ok = q.opts[idx].correct;
+    var note;
+    if (ok) {
+      st.streak++; st.correct++;
+      var mult = st.streak >= 5 ? 2 : st.streak >= 3 ? 1.5 : 1;
+      var pts = Math.round(100 * mult);
+      st.score += pts;
+      note = '+' + pts + ' mata' + (mult > 1 ? ' (kombo ×' + mult + ')' : '');
+    } else {
+      st.streak = 0; st.missed.push(q);
+      note = 'Tiada mata kali ini. Baca kerja di atas, kemudian teruskan.';
+    }
+    var btns = document.querySelectorAll('.opt');
+    q.opts.forEach(function (o, k) {
+      btns[k].disabled = true;
+      if (o.correct) btns[k].classList.add('correct');
+      else if (k === idx) btns[k].classList.add('wrong');
+      else btns[k].classList.add('dim');
+    });
+    var fb = $('#fb');
+    fb.hidden = false;
+    fb.className = 'fb ' + (ok ? 'good' : 'bad');
+    $('#fb-title').textContent = ok ? 'Betul' : 'Salah. Jawapan: ' + q.answer;
+    $('#fb-work').textContent = q.working;
+    $('#fb-pts').textContent = note;
+    var last = (st.i + 1 >= TOTAL);
+    var nb = $('#b-next');
+    nb.textContent = last ? 'Lihat keputusan' : 'Seterusnya';
+    drawHud();
+    nb.focus();
+  }
+  function rankFor(n) {
+    if (n >= 18) return st.topic.rank;
+    if (n >= 14) return 'Juruteknik Mahir';
+    if (n >= 9) return 'Pelatih Makmal';
+    return 'Baru bermula, ulang kaji dan cuba lagi';
+  }
+  function today() {
+    var d = new Date();
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
+  }
+  function finish() {
+    var k = st.topic.k;
+    var prev = local.best[k];
+    if (!prev || st.score > prev.markah) local.best[k] = { markah: st.score, betul: st.correct, jumlah: st.done };
+    saveLocal();
+    $('#end-label').textContent = 'Misi tamat · ' + st.topic.n;
+    $('#rank').textContent = rankFor(st.correct);
+    $('#e-score').textContent = st.score;
+    $('#e-correct').textContent = st.correct + ' / ' + st.done;
+    $('#e-best').textContent = local.best[k].markah;
+    var m = $('#miss');
+    m.innerHTML = '';
+    if (!st.missed.length) {
+      var p = document.createElement('p'); p.textContent = 'Tiada kesilapan dalam misi ini.'; m.appendChild(p);
+    } else {
+      var h = document.createElement('div'); h.className = 'label'; h.textContent = 'Soalan untuk disemak semula'; m.appendChild(h);
+      st.missed.forEach(function (q) {
+        var d = document.createElement('div'); d.className = 'miss-item';
+        var a = document.createElement('b'); a.textContent = q.text + ' ' + q.answer;
+        var b = document.createElement('span'); b.textContent = q.working;
+        d.appendChild(a); d.appendChild(b); m.appendChild(d);
+      });
+    }
+    var nama = ($('#inp-nama').value || '').trim(), kump = ($('#inp-kump').value || '').trim();
+    $('#c-nama').textContent = nama || '(belum diisi)';
+    $('#c-kump').textContent = kump || '(belum diisi)';
+    $('#c-topik').textContent = st.topic.n + ' · ' + st.topic.name;
+    $('#c-markah').textContent = st.score;
+    $('#c-betul').textContent = st.correct + ' / ' + st.done;
+    $('#c-tarikh').textContent = today();
+    $('#c-warn').textContent = (nama && kump) ? '' : 'Nama atau kelas belum diisi.';
+    $('#c-warn').className = 'msg err';
+    show('s-end');
+  }
+
+  /* ---------- Acara ---------- */
+  $('#inp-nama').value = local.nama;
+  $('#inp-kump').value = local.kump;
+  $('#inp-nama').addEventListener('input', function () { local.nama = this.value; saveLocal(); drawTopics(); });
+  $('#inp-kump').addEventListener('input', function () { local.kump = this.value; saveLocal(); drawTopics(); });
+  var goHome = function () { drawTopics(); show('s-home'); };
+  $('#b-home').addEventListener('click', goHome);
+  $('#b-home2').addEventListener('click', goHome);
+  $('#b-again').addEventListener('click', function () { start(st.topic); });
+  $('#b-next').addEventListener('click', function () {
+    var last = (st.i + 1 >= TOTAL);
+    st.i++;
+    if (last) finish(); else nextQuestion();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!st || $('#s-game').hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target && e.target.tagName === 'INPUT') return;
+    if (!st.answered && /^[1-4]$/.test(e.key)) {
+      var n = parseInt(e.key, 10) - 1;
+      if (n < st.qs[st.i].opts.length) answer(n);
+    }
+  });
+  drawTopics();
+})();
+</script>
+
+</body>
+</html>
